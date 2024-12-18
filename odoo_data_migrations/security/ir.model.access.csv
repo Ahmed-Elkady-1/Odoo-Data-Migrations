@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_account_connect_db,access_account_connect_db,model_account_connect_db,,1,1,1,1
+access_model_mapping,access_model_mapping,model_model_mapping,,1,1,1,1
+access_account_model_analysis,access_account_model_analysis,model_account_model_analysis,,1,1,1,1

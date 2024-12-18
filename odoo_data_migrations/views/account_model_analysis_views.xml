@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_model_analysis_tree" model="ir.ui.view">
+            <field name="name">account.model.analysis.tree</field>
+            <field name="model">account.model.analysis</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="model_name"/>
+                    <field name="share_column"/>
+                    <field name="additional_target_column"/>
+                    <field name="info"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_model_analysis_form" model="ir.ui.view">
+            <field name="name">account.model.analysis.form</field>
+            <field name="model">account.model.analysis</field>
+            <field name="arch" type="xml">
+                <form string="">
+                    <header>
+                        <button name="action_show_account_move_difference" string="Show Account Move Difference" type="object" class="oe_highlight"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group string="">
+                                <field name="model_name"/>
+                                <field name="share_column"/>
+                                <field name="additional_target_column"/>
+                                <field name="info"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_model_analysis_action" model="ir.actions.act_window">
+            <field name="name">Model Analysis</field>
+            <field name="res_model">account.model.analysis</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+        <menuitem id="model_analysis_root_menu"
+            name="Model Analysis"
+            parent="account_connect_db_root_menu"
+            action="view_model_analysis_action"
+            sequence="2"/>
+    </data>
+</odoo>

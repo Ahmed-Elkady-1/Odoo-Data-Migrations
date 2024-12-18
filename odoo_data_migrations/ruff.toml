@@ -1,0 +1,17 @@
+line-length = 88
+preview = true
+output-format = "concise"
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401", "I001"]
+
+[lint]
+select = [
+    "E",  # pycodestyle errors (PEP 8)
+    "F",  # pyflakes errors (unused imports, etc.)
+    "I",  # isort errors (import sorting)
+    "C",  # Pylint convention violations
+    "N",  # PEP 8 naming conventions
+    "W",  # pycodestyle warnings.
+]
+exclude = ["/home/national/PycharmProjects/odoo-16/odoo/**"]

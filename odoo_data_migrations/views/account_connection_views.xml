@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="account_connect_db_tree" model="ir.ui.view">
+            <field name="name">account.connect.db.tree</field>
+            <field name="model">account.connect.db</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="db_source_name"/>
+                    <field name="db_source_host"/>
+                    <field name="db_source_port"/>
+                    <field name="db_source_user"/>
+                    <field name="db_source_password"/>
+                    <field name="db_target_name"/>
+                    <field name="db_target_host"/>
+                    <field name="db_target_port"/>
+                    <field name="db_target_user"/>
+                    <field name="db_target_password"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_account_connect_db_form" model="ir.ui.view">
+            <field name="name">account.connect.db.form</field>
+            <field name="model">account.connect.db</field>
+            <field name="arch" type="xml">
+                <form string="Connect to Database">
+                    <header>
+                        <button name="action_check_connection" string="Check Connections" type="object" class="oe_highlight"/>
+                        <button name="action_migrate_account_move_data" string="Load Account Move Data" type="object" class="oe_highlight"/>
+                        <button name="action_migrate_account_move_line_data" string="Load Move Line Data" type="object" class="oe_highlight"/>
+                        <button name="action_migrate_account_customer_data" string="Load Customer Data" type="object" class="oe_highlight"/>
+                        <button name="action_migrate_account_account" string="Load Account Account Data" type="object" class="oe_highlight"/>
+                        <button name="action_migrate_product_product" string="Load Account Product Data" type="object" class="oe_highlight"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group string="Database Source Configuration">
+                                <field name="db_source_name"/>
+                                <field name="db_source_host"/>
+                                <field name="db_source_port"/>
+                                <field name="db_source_user"/>
+                                <field name="db_source_password"/>
+                            </group>
+                            <group string="Database Target Configuration">
+                                <field name="db_target_name"/>
+                                <field name="db_target_host"/>
+                                <field name="db_target_port"/>
+                                <field name="db_target_user"/>
+                                <field name="db_target_password"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_account_connect_db_action" model="ir.actions.act_window">
+            <field name="name">Connect to Database</field>
+            <field name="res_model">account.connect.db</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+        <menuitem id="account_connect_db_root_menu"
+            name="Account Migrations"
+            sequence="1"/>
+
+        <menuitem id="account_connect_db_menu"
+            name="Connect to Database"
+            parent="account_connect_db_root_menu"
+            action="view_account_connect_db_action"
+            sequence="2"/>
+    </data>
+</odoo>
