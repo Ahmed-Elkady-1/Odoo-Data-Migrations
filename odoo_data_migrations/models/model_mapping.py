@@ -1,3 +1,4 @@
+from collections import defaultdict
 from itertools import product
 
 from attr import attributes
@@ -61,19 +62,15 @@ class ModelMapping(models.Model):
 
             for record in source_records:
                 source_id = record[source_columns.index('id')]
-                if source_id != 5:
-                    continue
+
                 if str(source_id) in existing_mapping:
                     _logger.info(f"Record {source_id} already exists. Skipping...")
                     continue
 
                 record_values = self._prepare_record_values(source_table, record, source_columns, shared_fields)
                 if source_table in ['product_template', 'product_category','product_attribute','product_attribute_value']:
-                    attribute_id, value_id = self._return_attribute_value_id(source_db,source_id)
-
-                    return
-                    new_record_id = self._insert_record_orm(source_table, record_values)
-                    self._create_mapping(source_table, source_id, new_record_id)
+                    new_record_id = self._insert_record_orm(source_db,source_table, record_values)
+                    # self._create_mapping(source_table, source_id, new_record_id)
 
                 else:
                     new_record_id = self._insert_record(target_db, source_table, record_values)
@@ -122,6 +119,11 @@ class ModelMapping(models.Model):
 
     def _get_shared_fields(self, source_model, source_columns):
         """Find shared fields between Odoo model and source table."""
+        if source_model == 'product.template':
+            return [
+                field for field in self.env[source_model]._fields
+                if field in source_columns
+            ]
         return [
             field for field in self.env[source_model]._fields
             if field in source_columns and field != 'id'
@@ -243,47 +245,40 @@ class ModelMapping(models.Model):
             _logger.error(f"Failed to insert record: {e}")
             raise ValidationError(_("Failed to insert record: %s") % str(e))
 
-    def _insert_record_orm(self, source_table, record_values):
+    def _insert_record_orm(self, source_db,source_table, record_values):
         """Insert a new record into the target table using ORM."""
         source_table = source_table.replace('_', '.')
         model = self.env[source_table]
         try:
             if source_table == 'product.template':
                 """Test skip bom line with same attribute values in bom lines."""
+                attribute_vals = self._return_attribute_value_id(source_db,record_values['id'])
 
-                Product = self.env['product.product']
-                ProductAttribute = self.env['product.attribute']
-                ProductAttributeValue = self.env['product.attribute.value']
-
-                # Product Attribute
-                att_color = ProductAttribute.create({'name': 'Color', 'sequence': 1})
-                att_size = ProductAttribute.create({'name': 'size', 'sequence': 2})
-
-                # Product Attribute color Value
-                att_color_red = ProductAttributeValue.create(
-                    {'name': 'red', 'attribute_id': att_color.id, 'sequence': 1})
-                att_color_blue = ProductAttributeValue.create(
-                    {'name': 'blue', 'attribute_id': att_color.id, 'sequence': 2})
-                # Product Attribute size Value
-                att_size_big = ProductAttributeValue.create({'name': 'big', 'attribute_id': att_size.id, 'sequence': 1})
-                att_size_medium = ProductAttributeValue.create(
-                    {'name': 'medium', 'attribute_id': att_size.id, 'sequence': 2})
-
+                record_values['attribute_line_ids']=[
+                        (0, 0, {
+                             'attribute_id': attribute_val['attribut_id'],
+                             'value_ids': [(6, 0, [attribute_val['value_id'],attribute_val['value_id']+1])]
+                         })
+                        for attribute_val in attribute_vals
+                ]
+                print(record_values)
                 # Create Template Product
-                product_template = self.env['product.template'].create({
-                    'name': 'Sofa',
-                    'attribute_line_ids': [
-                        (0, 0, {
-                            'attribute_id': att_color.id,
-                            'value_ids': [(6, 0, [att_color_red.id, att_color_blue.id])]
-                        }),
-                        (0, 0, {
-                            'attribute_id': att_size.id,
-                            'value_ids': [(6, 0, [att_size_big.id, att_size_medium.id])]
-                        })
-                    ]
-                })
-                return 1
+                # product_template = self.env['product.template'].create({
+                #     'name': 'Sofa',
+                #     'attribute_line_ids': [
+                #         (0, 0, {
+                #             'attribute_id': att_color.id,
+                #             'value_ids': [(6, 0, [att_color_red.id, att_color_blue.id])]
+                #         }),
+                #         (0, 0, {
+                #             'attribute_id': att_size.id,
+                #             'value_ids': [(6, 0, [att_size_big.id, att_size_medium.id])]
+                #         })
+                #     ]
+                # })
+                new_record = model.create(record_values)
+                # return 1
+
             else:
                 new_record = model.create(record_values)
             return new_record.id
@@ -303,14 +298,25 @@ class ModelMapping(models.Model):
 
     def _return_attribute_value_id(self,source_db,template_id):
         with source_db.cursor() as cursor:
+            product_attribute_value = self._get_existing_mapping('product_attribute_value')
+            product_attribute = self._get_existing_mapping('product_attribute')
             cursor.execute(f"SELECT * FROM product_template where id={template_id}")
             record = cursor.fetchone()
             product_template_id = record[0]
-            cursor.execute(f"SELECT * FROM product_template_attribute_line where product_tmpl_id={product_template_id}")
+            cursor.execute(f"SELECT id,attribute_id FROM product_template_attribute_line where product_tmpl_id={product_template_id}")
             line_ids = cursor.fetchall()
-            print(line_ids)
+            list_of_dict = []
+            for line in line_ids:
+                cursor.execute(f"SELECT * FROM product_attribute_value_product_template_attribute_line_rel where product_template_attribute_line_id={line[0]}")
+                vals= cursor.fetchall()
+                for val in vals:
+                    list_of_dict.append({
+                        "attribut_id":product_attribute.get(str(line[1]), 0),
+                        "value_id":product_attribute_value.get(str(val[0]), 0)
+                    })
+
+            return list_of_dict
 
 
 
-        return 1,1
 
